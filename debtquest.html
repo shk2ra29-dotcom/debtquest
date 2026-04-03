@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DebtQuest</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DebtQuest">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+  background: #F5F5F3;
+  color: #1A1A1A;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 0 40px 0;
+  -webkit-text-size-adjust: 100%;
+}
+.header {
+  background: #FFFFFF;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #E8E8E6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.header h1 span { color: #D85A30; }
+.streak-badge { background: #FFF3E0; color: #E65100; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.card { background: #FFFFFF; margin: 12px 16px; padding: 18px; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card-title { font-size: 13px; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.mode-chips { display: flex; gap: 8px; }
+.chip { flex: 1; text-align: center; padding: 10px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; }
+.chip-debt { background: #FAECE7; color: #993C1D; }
+.chip-save { background: #E1F5EE; color: #0F6E56; }
+.tier-list { list-style: none; }
+.tier-item { display: flex; align-items: center; padding: 8px 0; font-size: 14px; color: #1A1A1A; border-bottom: 1px solid #F0F0EE; }
+.tier-item:last-child { border-bottom: none; }
+.tier-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
+.tier-label { font-weight: 600; margin-right: 6px; }
+.tier-desc { color: #6B6B6B; font-size: 13px; }
+.input-row { display: flex; gap: 10px; }
+.input-row input { flex: 1; font-size: 28px; font-weight: 700; text-align: center; padding: 12px; border: 2px solid #E8E8E6; border-radius: 12px; outline: none; -webkit-appearance: none; appearance: none; }
+.input-row input:focus { border-color: #D85A30; }
+.btn-calc { background: #1A1A1A; color: #FFFFFF; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.btn-calc:active { opacity: 0.8; }
+#result-area { display: none; }
+.result-total { text-align: center; margin-bottom: 14px; }
+.result-total .amount { font-size: 40px; font-weight: 800; }
+.result-total .yen { font-size: 20px; font-weight: 600; color: #6B6B6B; }
+.result-total .tier-name { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.breakdown { display: flex; gap: 10px; margin-bottom: 14px; }
+.breakdown-item { flex: 1; padding: 12px; border-radius: 10px; text-align: center; }
+.breakdown-item.debt { background: #FAECE7; }
+.breakdown-item.save { background: #E1F5EE; }
+.breakdown-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.breakdown-item.debt .breakdown-label { color: #993C1D; }
+.breakdown-item.save .breakdown-label { color: #0F6E56; }
+.breakdown-value { font-size: 22px; font-weight: 800; }
+.breakdown-item.debt .breakdown-value { color: #D85A30; }
+.breakdown-item.save .breakdown-value { color: #1D9E75; }
+.breakdown-pct { font-size: 11px; font-weight: 600; color: #6B6B6B; }
+.btn-complete { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, #D85A30, #E8753F); color: #FFFFFF; letter-spacing: 0.5px; }
+.btn-complete:active { opacity: 0.85; }
+.btn-complete:disabled { background: #CCC; cursor: not-allowed; }
+.progress-section { margin-bottom: 14px; }
+.progress-section:last-child { margin-bottom: 0; }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-title { font-size: 14px; font-weight: 700; }
+.progress-title.debt-color { color: #993C1D; }
+.progress-title.save-color { color: #0F6E56; }
+.progress-nums { font-size: 12px; color: #6B6B6B; }
+.progress-bar-bg { width: 100%; height: 12px; background: #EAEAEA; border-radius: 6px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.progress-bar-fill.debt { background: #D85A30; }
+.progress-bar-fill.save { background: #1D9E75; }
+.history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F0F0EE; font-size: 14px; }
+.history-item:last-child { border-bottom: none; }
+.history-date { color: #6B6B6B; font-weight: 600; min-width: 80px; }
+.history-steps { color: #6B6B6B; font-size: 13px; }
+.history-amounts { text-align: right; }
+.history-debt { color: #D85A30; font-weight: 700; font-size: 13px; }
+.history-save { color: #1D9E75; font-weight: 700; font-size: 13px; }
+.empty-history { text-align: center; color: #6B6B6B; font-size: 14px; padding: 16px 0; }
+.setting-row { margin-bottom: 14px; }
+.setting-row:last-child { margin-bottom: 0; }
+.setting-label { font-size: 13px; font-weight: 600; color: #6B6B6B; margin-bottom: 4px; }
+.setting-input { width: 100%; font-size: 18px; font-weight: 700; padding: 10px 12px; border: 2px solid #E8E8E6; border-radius: 10px; outline: none; -webkit-appearance: none; appearance: none; }
+.setting-input:focus { border-color: #1D9E75; }
+.btn-save-settings { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; background: #1A1A1A; color: #FFFFFF; margin-top: 6px; }
+.btn-save-settings:active { opacity: 0.8; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1A1A1A; color: #FFFFFF; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s ease; z-index: 100; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.done-banner { background: #E1F5EE; color: #0F6E56; text-align: center; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 10px; margin-bottom: 10px; display: none; }
+</style>
+</head>
+<body>
+<div class="header"><h1>Debt<span>Quest</span></h1><div class="streak-badge" id="streak-badge">0</div></div>
+<div class="card"><div class="card-title">今日のクエスト</div><div class="mode-chips"><div class="chip chip-debt">借金返済</div><div class="chip chip-save">積み立て</div></div></div>
+<div class="card"><div class="card-title">ティアガイド</div><ul class="tier-list"><li class="tier-item"><div class="tier-icon" style="background:#FAECE7;">&#x1F6B6;</div><div><span class="tier-label">~7,999歩</span><span class="tier-desc">返済100%</span></div></li><li class="tier-item"><div class="tier-icon" style="background:#FFF8E1;">&#x1F3C3;</div><div><span class="tier-label">8,000~9,999歩</span><span class="tier-desc">返済70% / 積立30%</span></div></li><li class="tier-item"><div class="tier-icon" style="background:#E1F5EE;">&#x1F3C6;</div><div><span class="tier-label">10,000歩以上</span><span class="tier-desc">返済50% / 積立50%</span></div></li></ul></div>
+<div class="card"><div class="card-title">歩数を入力</div><div id="done-banner" class="done-banner">今日のクエストは完了済みです</div><div class="input-row"><input type="number" id="steps-input" placeholder="0" inputmode="numeric" pattern="[0-9]*"><button class="btn-calc" onclick="calcSteps()">計算</button></div></div>
+<div class="card" id="result-area"><div class="result-total"><div><span class="amount" id="result-amount">0</span><span class="yen">円</span></div><div><span class="tier-name" id="tier-name"></span></div></div><div class="breakdown"><div class="breakdown-item debt"><div class="breakdown-label">借金返済</div><div class="breakdown-value" id="result-debt">0</div><div class="breakdown-pct" id="result-debt-pct">0%</div></div><div class="breakdown-item save"><div class="breakdown-label">積み立て</div><div class="breakdown-value" id="result-save">0</div><div class="breakdown-pct" id="result-save-pct">0%</div></div></div><button class="btn-complete" id="btn-complete" onclick="completeQuest()">クエスト完了！</button></div>
+<div class="card"><div class="card-title">進捗</div><div class="progress-section"><div class="progress-header"><span class="progress-title debt-color">借金返済</span><span class="progress-nums" id="debt-progress-text">0 / 0</span></div><div class="progress-bar-bg"><div class="progress-bar-fill debt" id="debt-bar" style="width:0%"></div></div></div><div class="progress-section" style="margin-top:14px;"><div class="progress-header"><span class="progress-title save-color">積み立て</span><span class="progress-nums" id="save-progress-text">0 / 0</span></div><div class="progress-bar-bg"><div class="progress-bar-fill save" id="save-bar" style="width:0%"></div></div></div></div>
+<div class="card"><div class="card-title">直近7日の履歴</div><div id="history-list"><div class="empty-history">まだ記録がありません</div></div></div>
+<div class="card"><div class="card-title">目標設定</div><div class="setting-row"><div class="setting-label">借金残高（円）</div><input type="number" class="setting-input" id="setting-debt" inputmode="numeric" pattern="[0-9]*"></div><div class="setting-row"><div class="setting-label">積立目標（円）</div><input type="number" class="setting-input" id="setting-save" inputmode="numeric" pattern="[0-9]*"></div><button class="btn-save-settings" onclick="saveSettings()">設定を保存</button></div>
+<div class="toast" id="toast"></div>
+<script>
+var defaultData={settings:{totalDebt:5321811,savingsGoal:500000},history:[],totals:{debtPaid:0,saved:0,streak:0,lastEntryDate:null}};
+function loadData(){try{var r=localStorage.getItem('debtquest');if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(defaultData))}
+function saveData(d){localStorage.setItem('debtquest',JSON.stringify(d))}
+var data=loadData();var currentCalc=null;
+function fmt(n){return n.toLocaleString('ja-JP')}
+function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2000)}
+function calcSteps(){var i=document.getElementById('steps-input');var s=parseInt(i.value,10);if(isNaN(s)||s<0){showToast('正しい歩数を入力してください');return}var total=Math.round(s*0.1);var dp,sp,tl,tb,tc;if(s<8000){dp=100;sp=0;tl='\u{1F6B6} ウォーカー';tb='#FAECE7';tc='#993C1D'}else if(s<10000){dp=70;sp=30;tl='\u{1F3C3} ランナー';tb='#FFF8E1';tc='#E65100'}else{dp=50;sp=50;tl='\u{1F3C6} チャンピオン';tb='#E1F5EE';tc='#0F6E56'}var da=Math.round(total*dp/100);var sa=total-da;currentCalc={steps:s,total:total,debt:da,save:sa};document.getElementById('result-amount').textContent=fmt(total);var tn=document.getElementById('tier-name');tn.textContent=tl;tn.style.background=tb;tn.style.color=tc;document.getElementById('result-debt').textContent=fmt(da);document.getElementById('result-debt-pct').textContent=dp+'%';document.getElementById('result-save').textContent=fmt(sa);document.getElementById('result-save-pct').textContent=sp+'%';document.getElementById('result-area').style.display='block';var ad=data.history.some(function(h){return h.date===today()});var btn=document.getElementById('btn-complete');btn.disabled=ad;btn.textContent=ad?'記録済み':'クエスト完了！'}
+function completeQuest(){if(!currentCalc)return;var ts=today();if(data.history.some(function(h){return h.date===ts})){showToast('今日はすでに記録済みです');return}data.history.unshift({date:ts,steps:currentCalc.steps,total:currentCalc.total,debt:currentCalc.debt,save:currentCalc.save});if(data.history.length>30)data.history=data.history.slice(0,30);data.totals.debtPaid+=currentCalc.debt;data.totals.saved+=currentCalc.save;var y=new Date();y.setDate(y.getDate()-1);var ys=y.getFullYear()+'-'+('0'+(y.getMonth()+1)).slice(-2)+'-'+('0'+y.getDate()).slice(-2);if(data.totals.lastEntryDate===ys){data.totals.streak+=1}else if(data.totals.lastEntryDate!==ts){data.totals.streak=1}data.totals.lastEntryDate=ts;saveData(data);renderAll();var btn=document.getElementById('btn-complete');btn.disabled=true;btn.textContent='記録済み';showToast('クエスト完了！+'+fmt(currentCalc.total)+'円')}
+function renderAll(){document.getElementById('streak-badge').textContent='\u{1F525} '+data.totals.streak+'日連続';var dg=data.settings.totalDebt||1;var sg=data.settings.savingsGoal||1;var dp=Math.min(100,(data.totals.debtPaid/dg)*100);var sp=Math.min(100,(data.totals.saved/sg)*100);document.getElementById('debt-bar').style.width=dp.toFixed(1)+'%';document.getElementById('save-bar').style.width=sp.toFixed(1)+'%';document.getElementById('debt-progress-text').textContent='\u00a5'+fmt(data.totals.debtPaid)+' / \u00a5'+fmt(data.settings.totalDebt)+'（'+dp.toFixed(1)+'%）';document.getElementById('save-progress-text').textContent='\u00a5'+fmt(data.totals.saved)+' / \u00a5'+fmt(data.settings.savingsGoal)+'（'+sp.toFixed(1)+'%）';var list=document.getElementById('history-list');var rc=data.history.slice(0,7);if(rc.length===0){list.innerHTML='<div class="empty-history">まだ記録がありません</div>'}else{var h='';rc.forEach(function(r){h+='<div class="history-item"><span class="history-date">'+r.date.slice(5)+'</span><span class="history-steps">'+fmt(r.steps)+'歩</span><div class="history-amounts"><div class="history-debt">返済 \u00a5'+fmt(r.debt)+'</div><div class="history-save">積立 \u00a5'+fmt(r.save)+'</div></div></div>'});list.innerHTML=h}document.getElementById('setting-debt').value=data.settings.totalDebt;document.getElementById('setting-save').value=data.settings.savingsGoal;var ad=data.history.some(function(h){return h.date===today()});document.getElementById('done-banner').style.display=ad?'block':'none'}
+function saveSettings(){var d=parseInt(document.getElementById('setting-debt').value,10);var s=parseInt(document.getElementById('setting-save').value,10);if(isNaN(d)||d<=0||isNaN(s)||s<=0){showToast('正しい金額を入力してください');return}data.settings.totalDebt=d;data.settings.savingsGoal=s;saveData(data);renderAll();showToast('設定を保存しました')}
+(function(){var u=new URLSearchParams(window.location.search);var a=u.get('steps');if(a){document.getElementById('steps-input').value=a;setTimeout(function(){calcSteps()},100)}})();
+renderAll();
+</script>
+</body>
+</html>
