@@ -1,129 +1,1560 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>DebtQuest</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="DebtQuest">
-<link rel="apple-touch-icon" href="icon.png">
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
-  background: #F5F5F3;
-  color: #1A1A1A;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 0 0 40px 0;
-  -webkit-text-size-adjust: 100%;
-}
-.header {
-  background: #FFFFFF;
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #E8E8E6;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-.header h1 span { color: #D85A30; }
-.streak-badge { background: #FFF3E0; color: #E65100; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
-.card { background: #FFFFFF; margin: 12px 16px; padding: 18px; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.card-title { font-size: 13px; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-.mode-chips { display: flex; gap: 8px; }
-.chip { flex: 1; text-align: center; padding: 10px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; }
-.chip-debt { background: #FAECE7; color: #993C1D; }
-.chip-save { background: #E1F5EE; color: #0F6E56; }
-.tier-list { list-style: none; }
-.tier-item { display: flex; align-items: center; padding: 8px 0; font-size: 14px; color: #1A1A1A; border-bottom: 1px solid #F0F0EE; }
-.tier-item:last-child { border-bottom: none; }
-.tier-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
-.tier-label { font-weight: 600; margin-right: 6px; }
-.tier-desc { color: #6B6B6B; font-size: 13px; }
-.input-row { display: flex; gap: 10px; }
-.input-row input { flex: 1; font-size: 28px; font-weight: 700; text-align: center; padding: 12px; border: 2px solid #E8E8E6; border-radius: 12px; outline: none; -webkit-appearance: none; appearance: none; }
-.input-row input:focus { border-color: #D85A30; }
-.btn-calc { background: #1A1A1A; color: #FFFFFF; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.btn-calc:active { opacity: 0.8; }
-#result-area { display: none; }
-.result-total { text-align: center; margin-bottom: 14px; }
-.result-total .amount { font-size: 40px; font-weight: 800; }
-.result-total .yen { font-size: 20px; font-weight: 600; color: #6B6B6B; }
-.result-total .tier-name { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-.breakdown { display: flex; gap: 10px; margin-bottom: 14px; }
-.breakdown-item { flex: 1; padding: 12px; border-radius: 10px; text-align: center; }
-.breakdown-item.debt { background: #FAECE7; }
-.breakdown-item.save { background: #E1F5EE; }
-.breakdown-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-.breakdown-item.debt .breakdown-label { color: #993C1D; }
-.breakdown-item.save .breakdown-label { color: #0F6E56; }
-.breakdown-value { font-size: 22px; font-weight: 800; }
-.breakdown-item.debt .breakdown-value { color: #D85A30; }
-.breakdown-item.save .breakdown-value { color: #1D9E75; }
-.breakdown-pct { font-size: 11px; font-weight: 600; color: #6B6B6B; }
-.btn-complete { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, #D85A30, #E8753F); color: #FFFFFF; letter-spacing: 0.5px; }
-.btn-complete:active { opacity: 0.85; }
-.btn-complete:disabled { background: #CCC; cursor: not-allowed; }
-.progress-section { margin-bottom: 14px; }
-.progress-section:last-child { margin-bottom: 0; }
-.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.progress-title { font-size: 14px; font-weight: 700; }
-.progress-title.debt-color { color: #993C1D; }
-.progress-title.save-color { color: #0F6E56; }
-.progress-nums { font-size: 12px; color: #6B6B6B; }
-.progress-bar-bg { width: 100%; height: 12px; background: #EAEAEA; border-radius: 6px; overflow: hidden; }
-.progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
-.progress-bar-fill.debt { background: #D85A30; }
-.progress-bar-fill.save { background: #1D9E75; }
-.history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F0F0EE; font-size: 14px; }
-.history-item:last-child { border-bottom: none; }
-.history-date { color: #6B6B6B; font-weight: 600; min-width: 80px; }
-.history-steps { color: #6B6B6B; font-size: 13px; }
-.history-amounts { text-align: right; }
-.history-debt { color: #D85A30; font-weight: 700; font-size: 13px; }
-.history-save { color: #1D9E75; font-weight: 700; font-size: 13px; }
-.empty-history { text-align: center; color: #6B6B6B; font-size: 14px; padding: 16px 0; }
-.setting-row { margin-bottom: 14px; }
-.setting-row:last-child { margin-bottom: 0; }
-.setting-label { font-size: 13px; font-weight: 600; color: #6B6B6B; margin-bottom: 4px; }
-.setting-input { width: 100%; font-size: 18px; font-weight: 700; padding: 10px 12px; border: 2px solid #E8E8E6; border-radius: 10px; outline: none; -webkit-appearance: none; appearance: none; }
-.setting-input:focus { border-color: #1D9E75; }
-.btn-save-settings { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; background: #1A1A1A; color: #FFFFFF; margin-top: 6px; }
-.btn-save-settings:active { opacity: 0.8; }
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1A1A1A; color: #FFFFFF; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s ease; z-index: 100; pointer-events: none; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.done-banner { background: #E1F5EE; color: #0F6E56; text-align: center; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 10px; margin-bottom: 10px; display: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Re:Start">
+    <meta name="description" content="DebtQuest - Unified Debt Management PWA">
+    <meta name="theme-color" content="#0A0A0F">
+    <title>Re:Start - DebtQuest</title>
+    <link rel="manifest" href="data:application/json,{%22name%22:%22Re:Start%22,%22short_name%22:%22Re:Start%22,%22display%22:%22standalone%22,%22scope%22:%22/%22,%22start_url%22:%22/%22,%22background_color%22:%22%230A0A0F%22,%22theme_color%22:%22%230A0A0F%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%253Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%253E%253Crect fill=%27%23A78BFA%27 width=%27192%27 height=%27192%27/%253E%253Ctext x=%2796%27 y=%27120%27 font-size=%2780%27 text-anchor=%27middle%27 fill=%27white%27 font-weight=%27bold%27%253E$%253C/text%253E%253C/svg%253E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any%22}]}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            background: #0A0A0F;
+            color: #E5E7EB;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+            background: linear-gradient(135deg, #13131A 0%, #0A0A0F 100%);
+            border-bottom: 1px solid #1F2937;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #A78BFA;
+        }
+
+        .header-streak {
+            display: inline-block;
+            background: #FFD700;
+            color: #0A0A0F;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+            position: relative;
+        }
+
+        .content-area > * {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        .content-area.active-tab-0 .tab-content-0,
+        .content-area.active-tab-1 .tab-content-1,
+        .content-area.active-tab-2 .tab-content-2,
+        .content-area.active-tab-3 .tab-content-3,
+        .content-area.active-tab-4 .tab-content-4 {
+            display: block;
+        }
+
+        .tab-content {
+            padding: 16px;
+        }
+
+        .tab-content > div {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(60px + env(safe-area-inset-bottom));
+            background: #13131A;
+            border-top: 1px solid #1F2937;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
+        }
+
+        .tab-button {
+            flex: 1;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: #6B7280;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            min-width: 44px;
+            -webkit-user-select: none;
+        }
+
+        .tab-button.active {
+            color: #A78BFA;
+        }
+
+        .tab-button-label {
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .card {
+            background: #13131A;
+            border: 1px solid #1F2937;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #0A0A0F;
+            border: 1px solid #1F2937;
+            color: #E5E7EB;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            -webkit-appearance: none;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #A78BFA;
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.1);
+        }
+
+        .select-field {
+            width: 100%;
+            background: #0A0A0F;
+            border: 1px solid #1F2937;
+            color: #E5E7EB;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .select-field:focus {
+            outline: none;
+            border-color: #A78BFA;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-user-select: none;
+            margin-bottom: 8px;
+        }
+
+        .button-primary {
+            background: #A78BFA;
+            color: #0A0A0F;
+        }
+
+        .button-primary:active {
+            background: #9370DB;
+            transform: scale(0.98);
+        }
+
+        .button-secondary {
+            background: #00D4AA;
+            color: #0A0A0F;
+        }
+
+        .button-secondary:active {
+            background: #00B899;
+            transform: scale(0.98);
+        }
+
+        .button-danger {
+            background: #FF6B35;
+            color: white;
+        }
+
+        .button-danger:active {
+            background: #E55A24;
+            transform: scale(0.98);
+        }
+
+        .button-small {
+            width: auto;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-row .button {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .big-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #A78BFA;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #1F2937;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00D4AA 0%, #A78BFA 100%);
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-item {
+            background: #0A0A0F;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #1F2937;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #E5E7EB;
+        }
+
+        .loan-breakdown {
+            margin-top: 16px;
+        }
+
+        .loan-item {
+            background: #0A0A0F;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #1F2937;
+            margin-bottom: 8px;
+        }
+
+        .loan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .loan-name {
+            font-weight: bold;
+            color: #E5E7EB;
+        }
+
+        .loan-amount {
+            color: #FF6B35;
+            font-weight: bold;
+        }
+
+        .loan-rate {
+            font-size: 11px;
+            color: #6B7280;
+        }
+
+        .history-list {
+            margin-top: 16px;
+        }
+
+        .history-item {
+            background: #0A0A0F;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #1F2937;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .history-left {
+            flex: 1;
+        }
+
+        .history-date {
+            font-size: 11px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+
+        .history-memo {
+            font-size: 12px;
+            color: #E5E7EB;
+            margin-bottom: 4px;
+        }
+
+        .history-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+
+        .history-type-repay {
+            background: rgba(255, 107, 53, 0.2);
+            color: #FF6B35;
+        }
+
+        .history-type-invest {
+            background: rgba(0, 212, 170, 0.2);
+            color: #00D4AA;
+        }
+
+        .history-amount {
+            font-weight: bold;
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .amount-repay {
+            color: #FF6B35;
+        }
+
+        .amount-invest {
+            color: #00D4AA;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #13131A;
+            border: 1px solid #1F2937;
+            color: #E5E7EB;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+            font-size: 13px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: #00D4AA;
+            color: #00D4AA;
+        }
+
+        .toast.error {
+            border-color: #FF6B35;
+            color: #FF6B35;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .flash {
+            animation: flash 0.5s ease;
+        }
+
+        @keyframes flash {
+            0%, 100% { background: #13131A; }
+            50% { background: rgba(167, 139, 250, 0.2); }
+        }
+
+        .mode-banner {
+            background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+            color: #0A0A0F;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .tier-guide {
+            background: #0A0A0F;
+            border: 1px solid #1F2937;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .tier-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #1F2937;
+        }
+
+        .tier-item:last-child {
+            border-bottom: none;
+        }
+
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .setup-screen h1 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #A78BFA;
+        }
+
+        .setup-screen p {
+            color: #9CA3AF;
+            margin-bottom: 24px;
+        }
+
+        .milestone {
+            display: inline-block;
+            background: #0A0A0F;
+            border: 1px solid #1F2937;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            margin: 4px;
+            color: #00D4AA;
+        }
+
+        .chart-container {
+            background: #0A0A0F;
+            border: 1px solid #1F2937;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .chart-title {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #6B7280;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-line-solid {
+            width: 12px;
+            height: 2px;
+            background: #00D4AA;
+        }
+
+        .legend-line-dashed {
+            width: 12px;
+            height: 2px;
+            background: #A78BFA;
+            background-image: repeating-linear-gradient(
+                90deg,
+                #A78BFA 0px,
+                #A78BFA 3px,
+                transparent 3px,
+                transparent 6px
+            );
+        }
+
+        .step-result {
+            background: linear-gradient(135deg, #A78BFA 0%, #00D4AA 100%);
+            color: #0A0A0F;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 16px 0;
+            font-weight: bold;
+        }
+
+        .step-result-title {
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .step-result-amount {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .step-result-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 16px;
+            font-size: 12px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .breakdown-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .last-7-days {
+            margin-top: 16px;
+        }
+
+        .day-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .day-bar-chart {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 60px;
+            width: 100%;
+            margin-bottom: 12px;
+            background: #0A0A0F;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #1F2937;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #00D4AA 0%, #A78BFA 100%);
+            border-radius: 4px 4px 0 0;
+            min-height: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .bar-label {
+            font-size: 9px;
+            color: #6B7280;
+            text-align: center;
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #1F2937;
+            background: #0A0A0F;
+            color: #6B7280;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .type-btn.active {
+            border-color: #A78BFA;
+            color: #A78BFA;
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .type-btn.active-invest {
+            border-color: #00D4AA;
+            color: #00D4AA;
+            background: rgba(0, 212, 170, 0.1);
+        }
+
+        .loan-selector-group {
+            display: none;
+        }
+
+        .loan-selector-group.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-<div class="header"><h1>Debt<span>Quest</span></h1><div class="streak-badge" id="streak-badge">0</div></div>
-<div class="card"><div class="card-title">今日のクエスト</div><div class="mode-chips"><div class="chip chip-debt">借金返済</div><div class="chip chip-save">積み立て</div></div></div>
-<div class="card"><div class="card-title">ティアガイド</div><ul class="tier-list"><li class="tier-item"><div class="tier-icon" style="background:#FAECE7;">&#x1F6B6;</div><div><span class="tier-label">~7,999歩</span><span class="tier-desc">返済100%</span></div></li><li class="tier-item"><div class="tier-icon" style="background:#FFF8E1;">&#x1F3C3;</div><div><span class="tier-label">8,000~9,999歩</span><span class="tier-desc">返済70% / 積立30%</span></div></li><li class="tier-item"><div class="tier-icon" style="background:#E1F5EE;">&#x1F3C6;</div><div><span class="tier-label">10,000歩以上</span><span class="tier-desc">返済50% / 積立50%</span></div></li></ul></div>
-<div class="card"><div class="card-title">歩数を入力</div><div id="done-banner" class="done-banner">今日のクエストは完了済みです</div><div class="input-row"><input type="number" id="steps-input" placeholder="0" inputmode="numeric" pattern="[0-9]*"><button class="btn-calc" onclick="calcSteps()">計算</button></div></div>
-<div class="card" id="result-area"><div class="result-total"><div><span class="amount" id="result-amount">0</span><span class="yen">円</span></div><div><span class="tier-name" id="tier-name"></span></div></div><div class="breakdown"><div class="breakdown-item debt"><div class="breakdown-label">借金返済</div><div class="breakdown-value" id="result-debt">0</div><div class="breakdown-pct" id="result-debt-pct">0%</div></div><div class="breakdown-item save"><div class="breakdown-label">積み立て</div><div class="breakdown-value" id="result-save">0</div><div class="breakdown-pct" id="result-save-pct">0%</div></div></div><button class="btn-complete" id="btn-complete" onclick="completeQuest()">クエスト完了！</button></div>
-<div class="card"><div class="card-title">進捗</div><div class="progress-section"><div class="progress-header"><span class="progress-title debt-color">借金返済</span><span class="progress-nums" id="debt-progress-text">0 / 0</span></div><div class="progress-bar-bg"><div class="progress-bar-fill debt" id="debt-bar" style="width:0%"></div></div></div><div class="progress-section" style="margin-top:14px;"><div class="progress-header"><span class="progress-title save-color">積み立て</span><span class="progress-nums" id="save-progress-text">0 / 0</span></div><div class="progress-bar-bg"><div class="progress-bar-fill save" id="save-bar" style="width:0%"></div></div></div></div>
-<div class="card"><div class="card-title">直近7日の履歴</div><div id="history-list"><div class="empty-history">まだ記録がありません</div></div></div>
-<div class="card"><div class="card-title">目標設定</div><div class="setting-row"><div class="setting-label">借金残高（円）</div><input type="number" class="setting-input" id="setting-debt" inputmode="numeric" pattern="[0-9]*"></div><div class="setting-row"><div class="setting-label">積立目標（円）</div><input type="number" class="setting-input" id="setting-save" inputmode="numeric" pattern="[0-9]*"></div><button class="btn-save-settings" onclick="saveSettings()">設定を保存</button></div>
-<div class="toast" id="toast"></div>
-<script>
-var defaultData={settings:{totalDebt:5321811,savingsGoal:500000},history:[],totals:{debtPaid:0,saved:0,streak:0,lastEntryDate:null}};
-function loadData(){try{var r=localStorage.getItem('debtquest');if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(defaultData))}
-function saveData(d){localStorage.setItem('debtquest',JSON.stringify(d))}
-var data=loadData();var currentCalc=null;
-function fmt(n){return n.toLocaleString('ja-JP')}
-function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
-function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2000)}
-function calcSteps(){var i=document.getElementById('steps-input');var s=parseInt(i.value,10);if(isNaN(s)||s<0){showToast('正しい歩数を入力してください');return}var total=Math.round(s*0.1);var dp,sp,tl,tb,tc;if(s<8000){dp=100;sp=0;tl='\u{1F6B6} ウォーカー';tb='#FAECE7';tc='#993C1D'}else if(s<10000){dp=70;sp=30;tl='\u{1F3C3} ランナー';tb='#FFF8E1';tc='#E65100'}else{dp=50;sp=50;tl='\u{1F3C6} チャンピオン';tb='#E1F5EE';tc='#0F6E56'}var da=Math.round(total*dp/100);var sa=total-da;currentCalc={steps:s,total:total,debt:da,save:sa};document.getElementById('result-amount').textContent=fmt(total);var tn=document.getElementById('tier-name');tn.textContent=tl;tn.style.background=tb;tn.style.color=tc;document.getElementById('result-debt').textContent=fmt(da);document.getElementById('result-debt-pct').textContent=dp+'%';document.getElementById('result-save').textContent=fmt(sa);document.getElementById('result-save-pct').textContent=sp+'%';document.getElementById('result-area').style.display='block';var ad=data.history.some(function(h){return h.date===today()});var btn=document.getElementById('btn-complete');btn.disabled=ad;btn.textContent=ad?'記録済み':'クエスト完了！'}
-function completeQuest(){if(!currentCalc)return;var ts=today();if(data.history.some(function(h){return h.date===ts})){showToast('今日はすでに記録済みです');return}data.history.unshift({date:ts,steps:currentCalc.steps,total:currentCalc.total,debt:currentCalc.debt,save:currentCalc.save});if(data.history.length>30)data.history=data.history.slice(0,30);data.totals.debtPaid+=currentCalc.debt;data.totals.saved+=currentCalc.save;var y=new Date();y.setDate(y.getDate()-1);var ys=y.getFullYear()+'-'+('0'+(y.getMonth()+1)).slice(-2)+'-'+('0'+y.getDate()).slice(-2);if(data.totals.lastEntryDate===ys){data.totals.streak+=1}else if(data.totals.lastEntryDate!==ts){data.totals.streak=1}data.totals.lastEntryDate=ts;saveData(data);renderAll();var btn=document.getElementById('btn-complete');btn.disabled=true;btn.textContent='記録済み';showToast('クエスト完了！+'+fmt(currentCalc.total)+'円')}
-function renderAll(){document.getElementById('streak-badge').textContent='\u{1F525} '+data.totals.streak+'日連続';var dg=data.settings.totalDebt||1;var sg=data.settings.savingsGoal||1;var dp=Math.min(100,(data.totals.debtPaid/dg)*100);var sp=Math.min(100,(data.totals.saved/sg)*100);document.getElementById('debt-bar').style.width=dp.toFixed(1)+'%';document.getElementById('save-bar').style.width=sp.toFixed(1)+'%';document.getElementById('debt-progress-text').textContent='\u00a5'+fmt(data.totals.debtPaid)+' / \u00a5'+fmt(data.settings.totalDebt)+'（'+dp.toFixed(1)+'%）';document.getElementById('save-progress-text').textContent='\u00a5'+fmt(data.totals.saved)+' / \u00a5'+fmt(data.settings.savingsGoal)+'（'+sp.toFixed(1)+'%）';var list=document.getElementById('history-list');var rc=data.history.slice(0,7);if(rc.length===0){list.innerHTML='<div class="empty-history">まだ記録がありません</div>'}else{var h='';rc.forEach(function(r){h+='<div class="history-item"><span class="history-date">'+r.date.slice(5)+'</span><span class="history-steps">'+fmt(r.steps)+'歩</span><div class="history-amounts"><div class="history-debt">返済 \u00a5'+fmt(r.debt)+'</div><div class="history-save">積立 \u00a5'+fmt(r.save)+'</div></div></div>'});list.innerHTML=h}document.getElementById('setting-debt').value=data.settings.totalDebt;document.getElementById('setting-save').value=data.settings.savingsGoal;var ad=data.history.some(function(h){return h.date===today()});document.getElementById('done-banner').style.display=ad?'block':'none'}
-function saveSettings(){var d=parseInt(document.getElementById('setting-debt').value,10);var s=parseInt(document.getElementById('setting-save').value,10);if(isNaN(d)||d<=0||isNaN(s)||s<=0){showToast('正しい金額を入力してください');return}data.settings.totalDebt=d;data.settings.savingsGoal=s;saveData(data);renderAll();showToast('設定を保存しました')}
-(function(){var u=new URLSearchParams(window.location.search);var a=u.get('steps');if(a){document.getElementById('steps-input').value=a;setTimeout(function(){calcSteps()},100)}})();
-renderAll();
-</script>
+    <div class="app-container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-title">Re:Start</div>
+                <div class="header-streak" id="headerStreak" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="content-area active-tab-0">
+            <div class="tab-content tab-content-0">
+                <div id="stepsContent"></div>
+            </div>
+
+            <div class="tab-content tab-content-1">
+                <div id="overviewContent"></div>
+            </div>
+
+            <div class="tab-content tab-content-2">
+                <div id="recordContent"></div>
+            </div>
+
+            <div class="tab-content tab-content-3">
+                <div id="visionContent"></div>
+            </div>
+
+            <div class="tab-content tab-content-4">
+                <div id="settingsContent"></div>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-button active" data-tab="0">
+                <span>ð¶</span>
+                <span class="tab-button-label">æ­©æ°</span>
+            </button>
+            <button class="tab-button" data-tab="1">
+                <span>ð</span>
+                <span class="tab-button-label">æ¦è¦</span>
+            </button>
+            <button class="tab-button" data-tab="2">
+                <span>âï¸</span>
+                <span class="tab-button-label">è¨é²</span>
+            </button>
+            <button class="tab-button" data-tab="3">
+                <span>ð</span>
+                <span class="tab-button-label">ãã¸ã§ã³</span>
+            </button>
+            <button class="tab-button" data-tab="4">
+                <span>âï¸</span>
+                <span class="tab-button-label">è¨­å®</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'debt_dashboard_v2';
+        const LOANS = [
+            { id: 'rakuten', label: 'æ¥½å¤©ãªã', color: '#A78BFA', rate: 0.15 },
+            { id: 'smbc', label: 'ä¸äºä½åCL', color: '#00D4AA', rate: 0.12 },
+            { id: 'other', label: 'ãã®ä»', color: '#6B7280', rate: 0.18 },
+        ];
+
+        const SIM = [
+            {m:"2024/4",d:5934363},{m:"2024/5",d:5679943},{m:"2024/6",d:4991707},
+            {m:"2024/7",d:4938147},{m:"2024/8",d:5030999},{m:"2024/9",d:4997295},
+            {m:"2024/10",d:4963455},{m:"2024/11",d:4909346},{m:"2024/12",d:4958569},
+            {m:"2025/1",d:4902265},{m:"2025/2",d:4805823},{m:"2025/3",d:4677243},
+            {m:"2025/4",d:5575360},{m:"2025/5",d:5392422},{m:"2025/6",d:5514665},
+            {m:"2025/7",d:5739499},{m:"2025/8",d:5418083},{m:"2025/9",d:5263081},
+            {m:"2025/10",d:5244598},{m:"2025/11",d:5146590},{m:"2025/12",d:5096013},
+            {m:"2026/1",d:5331897},{m:"2026/2",d:5280917},{m:"2026/3",d:5361395},
+            {m:"2026/4",d:5321811},{m:"2026/5",d:5282627},{m:"2026/6",d:5243302},
+            {m:"2026/7",d:5203840},{m:"2026/8",d:5164239},{m:"2026/9",d:4379498},
+            {m:"2026/10",d:4357271},{m:"2026/11",d:4332249},{m:"2026/12",d:4307085},
+            {m:"2027/1",d:3331779},{m:"2027/2",d:3306330},{m:"2027/3",d:3275321},
+            {m:"2027/4",d:2762836},{m:"2027/5",d:2731328},{m:"2027/6",d:2697076},
+            {m:"2027/7",d:2662645},{m:"2027/8",d:2178018},{m:"2027/9",d:2143195},
+            {m:"2027/10",d:2105610},{m:"2027/11",d:2067826},{m:"2027/12",d:1579828},
+            {m:"2028/1",d:1541615},{m:"2028/2",d:1500620},{m:"2028/3",d:1459407},
+            {m:"2028/4",d:967960},{m:"2028/5",d:926279},{m:"2028/6",d:881796},
+            {m:"2028/7",d:837076},{m:"2028/8",d:342102},{m:"2028/9",d:296874},
+            {m:"2028/10",d:248824},{m:"2028/11",d:200516},{m:"2028/12",d:151934},
+            {m:"2029/1",d:103077},{m:"2029/2",d:53943},{m:"2029/3",d:4531},
+            {m:"2029/4",d:0},
+        ];
+
+        const INITIAL_DEBT = 6341811;
+        const RAKUTEN_PAID_DATE = '2026/9';
+        const FINAL_PAID_DATE = '2029/4';
+
+        let state = {
+            entries: [],
+            balances: { rakuten: '0', smbc: '0', other: '0' },
+            settings: { savingsGoal: 500000 },
+            steps: { history: [], streak: 0, lastEntryDate: null }
+        };
+
+        function loadState() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    state = JSON.parse(stored);
+                } catch (e) {
+                    console.error('Failed to parse state:', e);
+                }
+            }
+            return state;
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function switchTab(tabIndex) {
+            document.querySelectorAll('.tab-button').forEach((btn, i) => {
+                btn.classList.toggle('active', i === tabIndex);
+            });
+            document.querySelector('.content-area').className = `content-area active-tab-${tabIndex}`;
+            renderTab(tabIndex);
+        }
+
+        function renderTab(tabIndex) {
+            switch(tabIndex) {
+                case 0: renderStepsTab(); break;
+                case 1: renderOverviewTab(); break;
+                case 2: renderRecordTab(); break;
+                case 3: renderVisionTab(); break;
+                case 4: renderSettingsTab(); break;
+            }
+        }
+
+        function formatAmount(num) {
+            return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(num);
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ja-JP').format(num);
+        }
+
+        function getTodayDate() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        function getTotalRepaid() {
+            return state.entries
+                .filter(e => e.type === 'repay')
+                .reduce((sum, e) => sum + e.amount, 0);
+        }
+
+        function getTotalInvested() {
+            return state.entries
+                .filter(e => e.type === 'invest')
+                .reduce((sum, e) => sum + e.amount, 0);
+        }
+
+        function getCurrentDebt() {
+            const balances = Object.values(state.balances).map(b => parseInt(b) || 0);
+            return balances.reduce((a, b) => a + b, 0);
+        }
+
+        function getRecordCount() {
+            return state.entries.length;
+        }
+
+        function calculateStreak() {
+            if (!state.steps.history || state.steps.history.length === 0) return 0;
+            let streak = 0;
+            const today = new Date();
+            for (let i = 0; i < 365; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const found = state.steps.history.find(h => h.date === dateStr);
+                if (!found) break;
+                streak++;
+            }
+            return streak;
+        }
+
+        function updateStreak() {
+            state.steps.streak = calculateStreak();
+            saveState();
+            updateHeaderStreak();
+        }
+
+        function updateHeaderStreak() {
+            const streak = calculateStreak();
+            const streakEl = document.getElementById('headerStreak');
+            if (streak > 0) {
+                streakEl.textContent = `ð¥ ${streak}æ¥`;
+                streakEl.style.display = 'inline-block';
+            } else {
+                streakEl.style.display = 'none';
+            }
+        }
+
+        function renderStepsTab() {
+            const today = getTodayDate();
+            const todayEntry = state.steps.history.find(h => h.date === today);
+            let html = '';
+
+            if (todayEntry) {
+                html = `
+                    <div class="mode-banner">â ä»æ¥ã®ã¯ã¨ã¹ãå®äºï¼</div>
+                    <div class="card">
+                        <div class="step-result">
+                            <div class="step-result-title">æ¬æ¥ã®çµæ</div>
+                            <div class="step-result-amount">${formatNumber(todayEntry.steps)}æ­©</div>
+                            <div class="step-result-breakdown">
+                                <div class="breakdown-item">
+                                    <div>è¿æ¸</div>
+                                    <div class="breakdown-value">${formatNumber(todayEntry.debt)}å</div>
+                                </div>
+                                <div class="breakdown-item">
+                                    <div>ç©ç«</div>
+                                    <div class="breakdown-value">${formatNumber(todayEntry.save)}å</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 12px; color: rgba(0,0,0,0.7);">
+                                ${todayEntry.total}å ç·é¡
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="card">
+                        <label class="input-label">ä»æ¥ã®æ­©æ°ãå¥å</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="stepsInput" class="input-field" placeholder="ä¾: 8500" style="flex: 1;" min="0">
+                            <button class="button button-primary button-small" onclick="calculateSteps()">è¨ç®</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="card">
+                    <div class="input-label">ãã£ã¢ã¬ã¤ã</div>
+                    <div class="tier-guide">
+                        <div class="tier-item">
+                            <span>~7,999æ­©</span>
+                            <span>100% è¿æ¸</span>
+                        </div>
+                        <div class="tier-item">
+                            <span>8,000~9,999æ­©</span>
+                            <span>70% è¿æ¸ / 30% ç©ç«</span>
+                        </div>
+                        <div class="tier-item">
+                            <span>10,000æ­©+</span>
+                            <span>50% è¿æ¸ / 50% ç©ç«</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="stepsResult"></div>
+            `;
+
+            if (state.steps.history.length > 0) {
+                const last7 = state.steps.history.slice(-7);
+                const maxSteps = Math.max(...last7.map(h => h.steps), 10000);
+
+                html += `
+                    <div class="card">
+                        <div class="input-label">éå»7æ¥é</div>
+                        <div class="day-bar-chart">
+                            ${last7.map((h, i) => {
+                                const height = (h.steps / maxSteps) * 100;
+                                const date = new Date(h.date);
+                                return `
+                                    <div class="day-bar">
+                                        <div class="bar" style="height: ${height}%;"></div>
+                                        <div class="bar-label">${date.getDate()}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('stepsContent').innerHTML = html;
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('steps')) {
+                const stepsVal = parseInt(params.get('steps'));
+                if (stepsVal > 0) {
+                    document.getElementById('stepsInput').value = stepsVal;
+                    calculateSteps();
+                }
+            }
+        }
+
+        function calculateSteps() {
+            const stepsInput = document.getElementById('stepsInput');
+            const steps = parseInt(stepsInput.value) || 0;
+            if (steps <= 0) {
+                showToast('æ­©æ°ãå¥åãã¦ãã ãã', 'error');
+                return;
+            }
+
+            const total = Math.round(steps * 0.1);
+            let debt, save, tier;
+
+            if (steps < 8000) {
+                debt = total;
+                save = 0;
+                tier = 'åç´';
+            } else if (steps < 10000) {
+                debt = Math.round(total * 0.7);
+                save = total - debt;
+                tier = 'ä¸­ç´';
+            } else {
+                debt = Math.round(total * 0.5);
+                save = total - debt;
+                tier = 'ä¸ç´';
+            }
+
+            let html = `
+                <div class="card">
+                    <div class="step-result">
+                        <div class="step-result-title">${tier}ð¯ ${steps}æ­©</div>
+                        <div class="step-result-amount">${formatNumber(total)}å</div>
+                        <div class="step-result-breakdown">
+                            <div class="breakdown-item">
+                                <div>è¿æ¸</div>
+                                <div class="breakdown-value">${formatNumber(debt)}å</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div>ç©ç«</div>
+                                <div class="breakdown-value">${formatNumber(save)}å</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="button button-secondary" onclick="completeQuest(${steps}, ${total}, ${debt}, ${save})">ã¯ã¨ã¹ãå®äºï¼</button>
+                </div>
+            `;
+            document.getElementById('stepsResult').innerHTML = html;
+        }
+
+        function completeQuest(steps, total, debt, save) {
+            const today = getTodayDate();
+            const now = new Date().toISOString();
+
+            const repayId = Date.now();
+            state.entries.push({
+                id: repayId,
+                date: now,
+                amount: debt,
+                memo: `æ­©æ°: ${steps}æ­© è¿æ¸`,
+                type: 'repay',
+                loanId: 'smbc',
+                source: 'steps'
+            });
+
+            if (save > 0) {
+                const investId = Date.now() + 1;
+                state.entries.push({
+                    id: investId,
+                    date: now,
+                    amount: save,
+                    memo: `æ­©æ°: ${steps}æ­© ç©ç«`,
+                    type: 'invest',
+                    loanId: '',
+                    source: 'steps'
+                });
+            }
+
+            const existing = state.steps.history.find(h => h.date === today);
+            if (existing) {
+                existing.steps = steps;
+                existing.total = total;
+                existing.debt = debt;
+                existing.save = save;
+            } else {
+                state.steps.history.push({
+                    date: today,
+                    steps,
+                    total,
+                    debt,
+                    save
+                });
+            }
+
+            state.steps.lastEntryDate = today;
+            saveState();
+            updateStreak();
+            showToast('ã¯ã¨ã¹ãå®äºï¼ðª', 'success');
+
+            const card = event.target.closest('.card');
+            if (card) card.classList.add('flash');
+            setTimeout(() => {
+                renderStepsTab();
+            }, 600);
+        }
+
+        function renderOverviewTab() {
+            const currentDebt = getCurrentDebt();
+            const remaining = Math.max(0, currentDebt);
+            const repaid = getTotalRepaid();
+            const invested = getTotalInvested();
+            const percent = INITIAL_DEBT > 0 ? Math.min(100, (repaid / INITIAL_DEBT) * 100) : 0;
+            const records = getRecordCount();
+
+            let html = `
+                <div class="big-number">${formatNumber(remaining)}å</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percent}%"></div>
+                </div>
+                <div style="text-align: center; color: #6B7280; font-size: 12px; margin-bottom: 16px;">
+                    ${Math.round(percent)}% å®æ¸ã¾ã§
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">ç·è¿æ¸é¡</div>
+                        <div class="stat-value">${formatNumber(repaid)}å</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">ç·ç©ç«é¡</div>
+                        <div class="stat-value">${formatNumber(invested)}å</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">åã®åé</div>
+                        <div class="stat-value">${formatNumber(INITIAL_DEBT)}å</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">è¨é²åæ°</div>
+                        <div class="stat-value">${records}å</div>
+                    </div>
+                </div>
+
+                <div class="loan-breakdown">
+                    <div class="input-label">ã­ã¼ã³å¥æ®é«</div>
+            `;
+
+            LOANS.forEach(loan => {
+                const balance = parseInt(state.balances[loan.id]) || 0;
+                const rate = Math.min(100, (repaid / INITIAL_DEBT) * 100);
+                html += `
+                    <div class="loan-item">
+                        <div class="loan-header">
+                            <div class="loan-name">${loan.label}</div>
+                            <div class="loan-amount">${formatNumber(balance)}å</div>
+                        </div>
+                        <div class="progress-bar" style="margin: 8px 0;">
+                            <div class="progress-fill" style="width: ${rate}%; background: ${loan.color};"></div>
+                        </div>
+                        <div class="loan-rate">éå©: ${(loan.rate * 100).toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('overviewContent').innerHTML = html;
+        }
+
+        function renderRecordTab() {
+            let html = `
+                <div class="card">
+                    <div class="input-label">ã¿ã¤ããé¸æ</div>
+                    <div class="type-selector">
+                        <button class="type-btn active" onclick="selectRecordType('repay')">è¿æ¸</button>
+                        <button class="type-btn" onclick="selectRecordType('invest')">ç©ç«</button>
+                    </div>
+
+                    <div class="loan-selector-group active" id="loanSelector">
+                        <label class="input-label">ã­ã¼ã³ãé¸æ</label>
+                        <select id="loanSelect" class="select-field">
+                            <option value="">é¸æ...</option>
+                            ${LOANS.map(l => `<option value="${l.id}">${l.label}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <label class="input-label">éé¡</label>
+                    <input type="number" id="amountInput" class="input-field" placeholder="ä¾: 1000" min="0">
+
+                    <label class="input-label">ã¡ã¢</label>
+                    <input type="text" id="memoInput" class="input-field" placeholder="ä¾: ã³ã³ããææ¢ããå">
+
+                    <button class="button button-primary" onclick="recordEntry()">è¨é²ãã</button>
+                </div>
+
+                <div class="history-list">
+                    <div class="input-label">æè¿ã®è¨é²</div>
+            `;
+
+            const recent = state.entries.slice().reverse().slice(0, 15);
+            if (recent.length === 0) {
+                html += `<div style="text-align: center; color: #6B7280; padding: 20px;">è¨é²ãããã¾ãã</div>`;
+            } else {
+                recent.forEach(entry => {
+                    const date = new Date(entry.date);
+                    const dateStr = date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const typeLabel = entry.type === 'repay' ? 'è¿æ¸' : 'ç©ç«';
+                    const typeClass = entry.type === 'repay' ? 'history-type-repay' : 'history-type-invest';
+                    const amountClass = entry.type === 'repay' ? 'amount-repay' : 'amount-invest';
+
+                    html += `
+                        <div class="history-item">
+                            <div class="history-left">
+                                <div class="history-date">${dateStr}</div>
+                                <div class="history-memo">${entry.memo}</div>
+                                <span class="history-type ${typeClass}">${typeLabel}</span>
+                            </div>
+                            <div class="history-amount ${amountClass}">+${formatNumber(entry.amount)}å</div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('recordContent').innerHTML = html;
+
+            const currentType = 'repay';
+            document.getElementById('loanSelector').className = `loan-selector-group ${currentType === 'repay' ? 'active' : ''}`;
+        }
+
+        let recordType = 'repay';
+
+        function selectRecordType(type) {
+            recordType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('active', 'active-invest');
+                if (btn.textContent.includes(type === 'repay' ? 'è¿æ¸' : 'ç©ç«')) {
+                    btn.classList.add(type === 'repay' ? 'active' : 'active-invest');
+                }
+            });
+            document.getElementById('loanSelector').className = `loan-selector-group ${type === 'repay' ? 'active' : ''}`;
+        }
+
+        function recordEntry() {
+            const amount = parseInt(document.getElementById('amountInput').value);
+            const memo = document.getElementById('memoInput').value.trim();
+            const loanId = recordType === 'repay' ? document.getElementById('loanSelect').value : '';
+
+            if (!amount || amount <= 0) {
+                showToast('éé¡ãå¥åãã¦ãã ãã', 'error');
+                return;
+            }
+
+            if (recordType === 'repay' && !loanId) {
+                showToast('ã­ã¼ã³ãé¸æãã¦ãã ãã', 'error');
+                return;
+            }
+
+            const entry = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                amount,
+                memo: memo || (recordType === 'repay' ? `${LOANS.find(l => l.id === loanId)?.label}ã¸è¿æ¸` : 'ç©ç«'),
+                type: recordType,
+                loanId: loanId || '',
+                source: 'manual'
+            };
+
+            state.entries.push(entry);
+            saveState();
+            showToast('è¨é²ãã¾ããï¼', 'success');
+
+            document.getElementById('amountInput').value = '';
+            document.getElementById('memoInput').value = '';
+            document.getElementById('loanSelect').value = '';
+
+            renderRecordTab();
+            renderOverviewTab();
+        }
+
+        function renderVisionTab() {
+            const now = new Date('2026-04-05');
+            const currentMonth = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const currentDebt = getCurrentDebt();
+
+            const simPoint = SIM.find(p => p.m === RAKUTEN_PAID_DATE);
+            const finalPoint = SIM.find(p => p.m === FINAL_PAID_DATE);
+
+            let html = `
+                <div class="card">
+                    <div class="input-label">ã·ãã¥ã¬ã¼ã·ã§ã³ vs å®ç¸</div>
+                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px;">
+                        ðµ å®ç¸å¤ | ð£ ã·ãã¥ã¬ã¼ã·ã§ã³
+                    </div>
+                    <svg width="100%" height="200" viewBox="0 0 400 200" style="background: #0A0A0F; border-radius: 8px;">
+                        <line x1="30" y1="10" x2="30" y2="170" stroke="#1F2937" stroke-width="1"/>
+                        <line x1="30" y1="170" x2="390" y2="170" stroke="#1F2937" stroke-width="1"/>
+
+                        <text x="25" y="15" font-size="10" fill="#6B7280" text-anchor="end">600ä¸</text>
+                        <text x="25" y="95" font-size="10" fill="#6B7280" text-anchor="end">300ä¸</text>
+                        <text x="25" y="175" font-size="10" fill="#6B7280" text-anchor="end">0å</text>
+
+                        ${renderSimLine()}
+
+                        ${renderActualLine()}
+
+                        <line x1="120" y1="10" x2="120" y2="170" stroke="#6B7280" stroke-width="1" stroke-dasharray="3,3"/>
+                        <text x="120" y="185" font-size="9" fill="#6B7280" text-anchor="middle">ä»æ¥</text>
+
+                        <line x1="260" y1="10" x2="260" y2="170" stroke="#FFD700" stroke-width="2" stroke-dasharray="4,4"/>
+                        <text x="260" y="185" font-size="9" fill="#FFD700" text-anchor="middle">æ¥½å¤©å®æ¸</text>
+
+                        <line x1="380" y1="10" x2="380" y2="170" stroke="#00D4AA" stroke-width="2" stroke-dasharray="4,4"/>
+                        <text x="380" y="185" font-size="9" fill="#00D4AA" text-anchor="middle">å¨å®æ¸</text>
+                    </svg>
+                </div>
+
+                <div class="card">
+                    <div class="input-label">ç¾å¨ç¶æ³</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">å®ç¸¾æ®é«</div>
+                            <div class="stat-value" style="color: #00D4AA;">${formatNumber(currentDebt)}å</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">ã·ãã¥ã¬ã¼ã·ã§ã³</div>
+                            <div class="stat-value" style="color: #A78BFA;">${formatNumber(SIM[SIM.findIndex(p => p.m === currentMonth)]?.d || 0)}å</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="input-label">ç®æ¨ãã¤ã«ã¹ãã¼ã³</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="milestone">
+                            <div style="color: #FFD700; font-weight: bold;">æ¥½å¤©ãªãå®æ¸</div>
+                            <div style="font-size: 10px; color: #6B7280;">2026å¹´9æ</div>
+                        </div>
+                        <div class="milestone">
+                            <div style="color: #00D4AA; font-weight: bold;">å¨ã­ã¼ã³å®æ¸</div>
+                            <div style="font-size: 10px; color: #6B7280;">2029å¹´4æ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="input-label">æè³æ®é«æ¨ç§»</div>
+                    <svg width="100%" height="120" viewBox="0 0 400 120" style="background: #0A0A0F; border-radius: 8px;">
+                        <line x1="30" y1="10" x2="30" y2="100" stroke="#1F2937" stroke-width="1"/>
+                        <line x1="30" y1="100" x2="390" y2="100" stroke="#1F2937" stroke-width="1"/>
+
+                        ${renderSavingsChart()}
+
+                        <text x="25" y="15" font-size="10" fill="#6B7280" text-anchor="end">ç®æ¨</text>
+                        <text x="25" y="105" font-size="10" fill="#6B7280" text-anchor="end">0å</text>
+                    </svg>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-line-solid"></div>
+                        <span>å®ç¸¾</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line-dashed"></div>
+                        <span>ã·ãã¥ã¬ã¼ã·ã§ã³</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('visionContent').innerHTML = html;
+        }
+
+        function renderSimLine() {
+            let path = `M 30 ${170 - (SIM[0].d / 6000000) * 160}`;
+            for (let i = 1; i < SIM.length; i++) {
+                const x = 30 + (i / SIM.length) * 360;
+                const y = 170 - (SIM[i].d / 6000000) * 160;
+                path += ` L ${x} ${y}`;
+            }
+            return `<path d="${path}" stroke="#A78BFA" stroke-width="2" fill="none" stroke-dasharray="4,4"/>`;
+        }
+
+        function renderActualLine() {
+            const currentDebt = getCurrentDebt();
+            let points = [[30, 170 - (INITIAL_DEBT / 6000000) * 160]];
+
+            const sortedEntries = state.entries.filter(e => e.type === 'repay').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (sortedEntries.length > 0) {
+                let repaidTotal = 0;
+                const uniqueDates = [...new Set(sortedEntries.map(e => e.date.split('T')[0]))];
+
+                uniqueDates.forEach((date, idx) => {
+                    const dayRepaid = sortedEntries
+                        .filter(e => e.date.startsWith(date))
+                        .reduce((sum, e) => sum + e.amount, 0);
+                    repaidTotal += dayRepaid;
+
+                    const remaining = INITIAL_DEBT - repaidTotal;
+                    const x = 30 + ((idx + 1) / Math.max(uniqueDates.length, 1)) * 360;
+                    const y = 170 - Math.max(0, remaining / 6000000) * 160;
+                    points.push([x, y]);
+                });
+            }
+
+            let path = `M ${points[0][0]} ${points[0][1]}`;
+            for (let i = 1; i < points.length; i++) {
+                path += ` L ${points[i][0]} ${points[i][1]}`;
+            }
+            return `<path d="${path}" stroke="#00D4AA" stroke-width="2" fill="none"/>`;
+        }
+
+        function renderSavingsChart() {
+            const invested = getTotalInvested();
+            const goal = state.settings.savingsGoal;
+            const percent = Math.min(100, (invested / goal) * 100);
+            const barWidth = 30;
+            const barHeight = percent * 0.8;
+
+            return `
+                <rect x="50" y="${100 - barHeight}" width="${barWidth}" height="${barHeight}" fill="#00D4AA" rx="2"/>
+                <text x="${50 + barWidth / 2}" y="110" font-size="10" fill="#6B7280" text-anchor="middle">${Math.round(percent)}%</text>
+                <text x="${50 + barWidth / 2}" y="20" font-size="9" fill="#6B7280" text-anchor="middle">${formatNumber(invested)}å</text>
+            `;
+        }
+
+        function renderSettingsTab() {
+            let html = `
+                <div class="card">
+                    <div class="input-label">ã­ã¼ã³æ®é«è¨­å®</div>
+            `;
+
+            LOANS.forEach(loan => {
+                const balance = state.balances[loan.id] || '0';
+                html += `
+                    <div style="margin-bottom: 16px;">
+                        <label class="input-label">${loan.label} (${(loan.rate * 100).toFixed(1)}%)</label>
+                        <input type="number" class="input-field" id="balance-${loan.id}" value="${balance}" min="0">
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+
+                <div class="card">
+                    <label class="input-label">ç©ç«ç®æ¨éé¡</label>
+                    <input type="number" class="input-field" id="savingsGoal" value="${state.settings.savingsGoal}" min="0">
+                </div>
+
+                <div class="card">
+                    <button class="button button-primary" onclick="saveSettings()">ä¿å­ãã</button>
+                </div>
+
+                <div class="card">
+                    <div class="input-label">ãã¼ã¿ç®¡ç</div>
+                    <button class="button button-secondary button-small" onclick="exportData()" style="width: 100%; margin-bottom: 8px;">ã¨ã¯ã¹ãã¼ã</button>
+                    <button class="button button-secondary button-small" onclick="document.getElementById('importFile').click()" style="width: 100%; margin-bottom: 8px;">ã¤ã³ãã¼ã</button>
+                    <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData()">
+                    <button class="button button-danger button-small" onclick="resetData()" style="width: 100%;">ãã¹ã¦ãªã»ãã</button>
+                </div>
+            `;
+
+            document.getElementById('settingsContent').innerHTML = html;
+        }
+
+        function saveSettings() {
+            LOANS.forEach(loan => {
+                const val = document.getElementById(`balance-${loan.id}`).value;
+                state.balances[loan.id] = val || '0';
+            });
+            state.settings.savingsGoal = parseInt(document.getElementById('savingsGoal').value) || 0;
+            saveState();
+            showToast('è¨­å®ãä¿å­ãã¾ãã', 'success');
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `debt_dashboard_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('ã¨ã¯ã¹ãã¼ããã¾ãã', 'success');
+        }
+
+        function importData() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.entries && imported.balances && imported.settings) {
+                        state = imported;
+                        saveState();
+                        showToast('ã¤ã³ãã¼ããã¾ãã', 'success');
+                        renderSettingsTab();
+                    } else {
+                        showToast('å½¢å¼ãæ­£ããããã¾ãã', 'error');
+                    }
+                } catch (err) {
+                    showToast('ãã¡ã¤ã«ã®èª­ã¿è¾¼ã¿ã«å¤±æãã¾ãã', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetData() {
+            if (confirm('ãã¹ã¦ã®ãã¼ã¿ãåé¤ãã¾ããæ¬å½ã«ããããã§ããï¼')) {
+                state = {
+                    entries: [],
+                    balances: { rakuten: '0', smbc: '0', other: '0' },
+                    settings: { savingsGoal: 500000 },
+                    steps: { history: [], streak: 0, lastEntryDate: null }
+                };
+                localStorage.removeItem(STORAGE_KEY);
+                saveState();
+                showToast('ãªã»ãããã¾ãã', 'success');
+                renderSettingsTab();
+            }
+        }
+
+        function init() {
+            loadState();
+
+            const currentDebt = getCurrentDebt();
+            if (currentDebt === 0 && state.entries.length === 0) {
+                const setupHtml = `
+                    <div class="setup-screen">
+                        <h1>Re:Start</h1>
+                        <p>åéè¿æ¸ç®¡çã¢ããªã¸ãããã</p>
+                        <p>ã¾ãã¯è¨­å®ã¿ãã§ã­ã¼ã³æ®é«ãå¥åãã¦ãã ãã</p>
+                        <button class="button button-primary" onclick="switchTab(4)">è¨­å®ã«é²ã â</button>
+                    </div>
+                `;
+                document.querySelector('.content-area').innerHTML = setupHtml;
+                return;
+            }
+
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabIndex = parseInt(btn.dataset.tab);
+                    switchTab(tabIndex);
+                });
+            });
+
+            updateHeaderStreak();
+            renderTab(0);
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
